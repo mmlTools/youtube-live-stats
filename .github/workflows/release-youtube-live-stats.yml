@@ -3,9 +3,8 @@ name: Release YouTube Live Stats
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
+    paths:
+      - "src/Youtube Live Stats.lua"
   workflow_dispatch:
 
 jobs:
@@ -14,92 +13,25 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout (full history for proper diff)
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Locate Lua file (case/dir tolerant)
-        id: locate
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Look for common name variants (case-insensitive), anywhere in repo
-          CANDIDATES="$(git ls-files \
-            | grep -E -i '(^|/)(youtube[ _-]?live[ _-]?stats\.lua)$' || true)"
-          echo "Found candidates:"
-          echo "$CANDIDATES"
-          if [ -z "$CANDIDATES" ]; then
-            echo "lua_path=" >> "$GITHUB_OUTPUT"
-            echo "No Lua file matched. Failing."
-            exit 1
-          fi
-          # Pick the first match deterministically
-          LUA_PATH="$(echo "$CANDIDATES" | head -n1)"
-          echo "lua_path=$LUA_PATH" >> "$GITHUB_OUTPUT"
-          echo "Using: $LUA_PATH"
-
-      - name: Show push SHAs (debug)
-        run: |
-          echo "BEFORE=${{ github.event.before }}"
-          echo "AFTER=${{ github.sha }}"
-
-      - name: Detect if Lua changed in this push
-        id: changed
-        shell: bash
-        env:
-          BEFORE: ${{ github.event.before }}
-          AFTER: ${{ github.sha }}
-          LUA: ${{ steps.locate.outputs.lua_path }}
-        run: |
-          set -euo pipefail
-          # Manual run? Release.
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "should_release=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # On some events BEFORE can be all zeros or empty; treat as "changed"
-          if [ -z "${BEFORE}" ] || [ "${BEFORE}" = "0000000000000000000000000000000000000000" ]; then
-            echo "should_release=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Make sure both SHAs exist locally
-          git fetch --no-tags --prune --depth=200 origin "${BEFORE}" "${AFTER}" || true
-
-          git diff --name-only "${BEFORE}" "${AFTER}" | sed 's#^\./##' > /tmp/changed.txt
-          echo "Changed files:"
-          cat /tmp/changed.txt
-
-          # Exact path match (handles spaces)
-          if grep -Fxq "${LUA}" /tmp/changed.txt; then
-            echo "Lua changed: ${LUA}"
-            echo "should_release=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Lua NOT changed in this push."
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Compute tag
-        if: steps.changed.outputs.should_release == 'true'
         id: tag
         run: echo "TAG=v$(date +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Zip Lua
-        if: steps.changed.outputs.should_release == 'true'
         env:
-          LUA: ${{ steps.locate.outputs.lua_path }}
+          LUA: "src/Youtube Live Stats.lua"
           TAG: ${{ steps.tag.outputs.TAG }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp "${LUA}" dist/
-          (cd dist && zip -9 "youtube-live-stats-${TAG}.zip" "$(basename "${LUA}")")
+          cp "$LUA" dist/
+          (cd dist && zip -9 "youtube-live-stats-${TAG}.zip" "$(basename "$LUA")")
           ls -lah dist
 
       - name: Create GitHub Release
-        if: steps.changed.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
@@ -109,7 +41,3 @@ jobs:
           generate_release_notes: true
           files: |
             dist/youtube-live-stats-${{ steps.tag.outputs.TAG }}.zip
-
-      - name: Skip (no lua changes)
-        if: steps.changed.outputs.should_release != 'true'
-        run: echo "No changes to the Lua file in this push. Skipping release."
