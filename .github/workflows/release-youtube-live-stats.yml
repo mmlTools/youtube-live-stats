@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "Youtube Live Stats.lua"
+    paths-ignore:
+      - "docs/**"
 
 jobs:
   release:
@@ -15,12 +17,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            lua:
+              - 'Youtube Live Stats.lua'
+
       - name: Compute tag
+        if: steps.changes.outputs.lua == 'true'
         id: tag
-        run: |
-          echo "TAG=v$(date +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+        run: echo "TAG=v$(date +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
+        if: steps.changes.outputs.lua == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
@@ -32,3 +43,7 @@ jobs:
           prerelease: false
           files: |
             Youtube Live Stats.lua
+
+      - name: Skip (no lua changes)
+        if: steps.changes.outputs.lua != 'true'
+        run: echo "No changes to 'Youtube Live Stats.lua' in this push. Skipping release."
