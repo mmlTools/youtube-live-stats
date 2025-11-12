@@ -356,7 +356,7 @@ function script_properties()
     return true
   end)
 
-  obs.obs_properties_add_button(p, "btn_paypal", "💳 Buy a Cookie on PayPal", function()
+  obs.obs_properties_add_button(p, "btn_paypal", "💳 Throw a Cookie on PayPal", function()
     open_url(URL_PAYPAL)
     return true
   end)
