@@ -313,7 +313,7 @@ local function populate_source_lists(p_likes, p_views, p_viewers)
 end
 
 function script_description()
-  return [[Fetch YouTube stats and update 3 Text sources (GDI+ / FreeType).]]
+  return [[Fetch YouTube stats and update 3 Text sources (GDI+ / FreeType)]]
 end
 
 function script_properties()
