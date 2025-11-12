@@ -9,84 +9,78 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-    outputs:
-      tag: ${{ steps.tag.outputs.TAG }}
-      should_release: ${{ steps.should.outputs.SHOULD_RELEASE }}
+      contents: write
     steps:
-      - name: Checkout
+      - name: Checkout (full history so diff works)
         uses: actions/checkout@v4
-
-      - name: Detect changes
-        id: changes
-        uses: dorny/paths-filter@v3
         with:
-          filters: |
-            lua:
-              - 'Youtube Live Stats.lua'
+          fetch-depth: 0
+
+      - name: Show push SHAs (debug)
+        run: |
+          echo "BEFORE=${{ github.event.before }}"
+          echo "AFTER=${{ github.sha }}"
+
+      - name: Detect if Lua changed in this push
+        id: changed
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # On manual runs, BEFORE may be empty; force release in that case
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ -z "${BEFORE}" ]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Ensure BOTH SHAs exist locally (needed on merge commits)
+          git fetch --no-tags --prune --depth=100 origin "${BEFORE}" "${AFTER}" || true
+
+          echo "Changed files between $BEFORE..$AFTER:"
+          git diff --name-only "${BEFORE}" "${AFTER}" | tee /tmp/changed.txt
+
+          if grep -Fxq "Youtube Live Stats.lua" /tmp/changed.txt; then
+            echo "Lua file changed."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Lua file NOT changed."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Compute tag
+        if: steps.changed.outputs.should_release == 'true'
         id: tag
         run: echo "TAG=v$(date +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
 
-      - name: Decide if we should release
-        id: should
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "SHOULD_RELEASE=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "SHOULD_RELEASE=${{ steps.changes.outputs.lua }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Zip Lua (only when releasing)
-        if: steps.should.outputs.SHOULD_RELEASE == 'true'
+      - name: Zip Lua
+        if: steps.changed.outputs.should_release == 'true'
         env:
           LUA_FILE: "Youtube Live Stats.lua"
           TAG: ${{ steps.tag.outputs.TAG }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp "$LUA_FILE" "dist/"
+          cp "$LUA_FILE" dist/
           (cd dist && zip -9 "youtube-live-stats-${TAG}.zip" "$LUA_FILE")
           ls -lah dist
 
-      - name: Upload artifact (zip)
-        if: steps.should.outputs.SHOULD_RELEASE == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: youtube-live-stats-${{ steps.tag.outputs.TAG }}
-          path: dist/*.zip
-
-  release:
-    needs: build
-    if: needs.build.outputs.should_release == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout (full for tagging)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-
-      - name: List artifacts
-        run: find ./artifacts -type f -maxdepth 3 -print
-
       - name: Create GitHub Release
+        if: steps.changed.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.build.outputs.tag }}
-          name: "YouTube Live Stats ${{ needs.build.outputs.tag }}"
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: "YouTube Live Stats ${{ steps.tag.outputs.TAG }}"
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            artifacts/**/youtube-live-stats-*.zip
+            dist/youtube-live-stats-${{ steps.tag.outputs.TAG }}.zip
+
+      - name: Skip (no lua changes)
+        if: steps.changed.outputs.should_release != 'true'
+        run: echo "No changes to 'Youtube Live Stats.lua' in this push. Skipping release."
