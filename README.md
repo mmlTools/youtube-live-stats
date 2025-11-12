@@ -19,7 +19,7 @@ No popups. Cross‑platform (Windows, macOS, Linux).
 > https://obscountdown.com/youtube-live-likes-counter-obs-studio#tutorial
 
 **Screenshot**  
-![OBS → Tools → Scripts — load the Lua file](docs/assets/img/Screenshot_5.png "OBS → Tools → Scripts — load the Lua file")
+![OBS → Tools → Scripts load the Lua file](docs/assets/img/Screenshot_5.png "OBS → Tools → Scripts load the Lua file")
 
 ---
 
@@ -50,10 +50,10 @@ obs-studio/
 **Screenshots**
 
 - Open **Tools → Scripts**  
-  ![Open the Scripts window in OBS](docs/assets/img/Screenshot_2.png "Open the Scripts window in OBS")
+  ![Open the Scripts window in OBS](docs/assets/img/Screenshot_3.png "Open the Scripts window in OBS")
 
 - Press **＋ Add** and load the Lua file from your `obs-scripts` folder.  
-  ![Load the Lua script with the + button](docs/assets/img/Screenshot_3.png "Load the Lua script with the + button")
+  ![Load the Lua script with the + button](docs/assets/img/Screenshot_2.png "Load the Lua script with the + button")
 
 ---
 
@@ -68,7 +68,7 @@ obs-studio/
 | **Font / Color**                   | Optional: set consistent visual style for all three sources. |
 
 **Screenshot**  
-![Script properties with sources, API key, and formatting](docs/assets/img/Screenshot_4.png "Script properties with sources, API key, and formatting")
+![Script properties with sources, API key, and formatting](docs/assets/img/Screenshot_5.png "Script properties with sources, API key, and formatting")
 
 ---
 
@@ -91,10 +91,10 @@ If a source is missing, the script can **create it automatically** and add it to
 ## FAQ
 
 **Q.** Does it run on all platforms?  
-**A.** Yes — Windows, macOS, and Linux.
+**A.** Yes Windows, macOS, and Linux.
 
 **Q.** Can I change fonts/colors later?  
-**A.** Yes — adjust the font and color picker and click **🎨 Apply Formatting**.
+**A.** Yes adjust the font and color picker and click **🎨 Apply Formatting**.
 
 **Q.** Where do I get the API key?  
 **A.** See the tutorial on https://obscountdown.com/youtube-live-likes-counter-obs-studio#tutorial
@@ -104,4 +104,4 @@ If a source is missing, the script can **create it automatically** and add it to
 ## Credits
 
 Powered by **obscountdown.com**  
-Author: **MMLTech** — [Ko‑fi](https://ko-fi.com/mmltech) • [PayPal](https://paypal.me/mmltools)
+Author: **MMLTech** - [Ko‑fi](https://ko-fi.com/mmltech) • [PayPal](https://paypal.me/mmltools)
