@@ -28,6 +28,28 @@ local font_style    = ""
 local text_color    = 0xFFFFFFFF
 local apply_format  = true
 
+local URL_TUTORIAL = "https://obscountdown.com/youtube-live-likes-counter-obs-studio#tutorial"
+local URL_KOFI     = "https://ko-fi.com/mmltech"
+local URL_PAYPAL   = "https://paypal.me/mmltools"
+
+local function open_url(u)
+  if not u or u == "" then return end
+  local is_windows = package.config:sub(1,1) == "\\"
+
+  if is_windows then
+    local cmd = string.format('rundll32 url.dll,FileProtocolHandler "%s"', u)
+    local h = io.popen(cmd, "r")
+    if h then h:close() end
+  else
+    local cmd = string.format('open "%s" >/dev/null 2>&1 &', u)
+    local ok = os.execute(cmd)
+    if not ok then
+      cmd = string.format('xdg-open "%s" >/dev/null 2>&1 &', u)
+      os.execute(cmd)
+    end
+  end
+end
+
 local function sanitize(n) return (n and n ~= "") and tostring(n) or "-" end
 
 local function build_url()
@@ -126,7 +148,6 @@ local function apply_font_and_color_by_name(name)
   obs.obs_source_release(src)
 end
 
--- Enumerate text sources
 local function get_text_sources()
   local list = {}
   local sources = obs.obs_enum_sources()
@@ -292,16 +313,7 @@ local function populate_source_lists(p_likes, p_views, p_viewers)
 end
 
 function script_description()
-  return [[Fetch YouTube stats and update 3 Text sources (GDI+ / FreeType).
-
-Steps:
-  1) Create 3 Text sources in your scene (or type their desired names below).
-  2) Pick them in the dropdowns (or click “Refresh & Create Missing”).
-  3) Enter Video ID and API Key, learn how to get the free key at https://obscountdown.com/youtube-live-likes-counter-obs-studio#tutorial.
-
-Tip: After editing the configuration, click “🎨 Apply Formatting” to save the fields.
-
-Support: https://ko-fi.com/mmltech • https://paypal.me/mmltools]]
+  return [[Fetch YouTube stats and update 3 Text sources (GDI+ / FreeType).]]
 end
 
 function script_properties()
@@ -331,6 +343,21 @@ function script_properties()
     apply_font_and_color_by_name(src_likes)
     apply_font_and_color_by_name(src_views)
     apply_font_and_color_by_name(src_viewers)
+    return true
+  end)
+  
+  obs.obs_properties_add_button(p, "btn_tutorial", "📖 Youtube API Key Tutorial", function()
+    open_url(URL_TUTORIAL)
+    return true
+  end)
+
+  obs.obs_properties_add_button(p, "btn_kofi", "☕ Buy me a Ko-fi", function()
+    open_url(URL_KOFI)
+    return true
+  end)
+
+  obs.obs_properties_add_button(p, "btn_paypal", "💳 Buy a Cookie on PayPal", function()
+    open_url(URL_PAYPAL)
     return true
   end)
 
