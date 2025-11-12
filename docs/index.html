@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>YouTube Live Stats OBS Lua Script</title>
+    <meta
+      name="description"
+      content="OBS Lua script that fetches YouTube live stats and updates 3 Text sources (GDI+ / FreeType 2). No popups. Cross-platform."
+    />
+    <link
+      rel="icon"
+      href="assets/img/yt-live-counter.ico"
+      type="image/svg+xml"
+    />
+    <link rel="stylesheet" href="assets/css/lightbox.css" />
+    <script src="assets/js/lightbox.js" defer></script>
+    <link rel="stylesheet" href="assets/css/style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <div>
+          <div class="brand">
+            <span class="dot"></span> YouTube Live Stats (OBS Lua)
+          </div>
+          <div class="subtitle">
+            Fetches YouTube stats and updates 3 Text sources (GDI+ / FreeType
+            2).
+          </div>
+          <nav class="tabs">
+            <a class="active" href="#quickstart">Quick Start</a>
+            <a href="#install">Install</a>
+            <a href="#config">Configure</a>
+            <a href="#troubleshoot">Troubleshoot</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+        </div>
+        <div class="cta">
+          <a
+            class="btn btn--brand"
+            href="../src/Youtube Live Stats.lua"
+            download
+            >⬇️ Download Script</a
+          >
+          <a
+            class="btn"
+            href="https://ko-fi.com/mmltech"
+            target="_blank"
+            rel="noopener"
+            >☕ Support on Ko‑fi</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="quickstart" class="card">
+        <h2>Quick Start</h2>
+        <div class="media-wrap">
+          <ol>
+            <li>
+              Open <span class="kbd">Tools → Scripts</span> in OBS and add
+              <code>Youtube Live Stats.lua</code>.
+            </li>
+            <li>
+              Create or type in three Text source names for
+              <strong>Likes</strong>, <strong>Views</strong>, and
+              <strong>Viewers</strong>.
+            </li>
+            <li>
+              Enter your <strong>YouTube Video ID</strong> and
+              <strong>API Key</strong>.
+            </li>
+            <li>
+              Click <span class="pill">🔄 Refresh and create sources</span> then
+              <span class="pill">🎨 Apply Formatting</span>.
+            </li>
+          </ol>
+
+          <figure
+            class="doc-fig"
+            aria-label="Quick Start screenshot placeholder"
+          >
+            <img
+              class="doc-shot"
+              src="assets/img/Screenshot_5.png"
+              alt="Quick Start screenshot placeholder"
+              data-lightbox
+              data-group="overall"
+            />
+            <figcaption>
+              OBS → Tools → Scripts and load
+              <code>Youtube Live Stats.lua</code>
+            </figcaption>
+          </figure>
+        </div>
+
+        <p>
+          <span class="tag tag--brand">Tip</span> Learn how to get a free
+          YouTube API key at
+          <a
+            href="https://obscountdown.com/youtube-live-likes-counter-obs-studio#tutorial"
+            target="_blank"
+            rel="noopener"
+            >obscountdown.com</a
+          >.
+        </p>
+      </section>
+
+      <section id="install" class="card">
+        <h2>Install</h2>
+        <div class="grid media-grid">
+          <div>
+            <h3>OBS Steps (All platforms)</h3>
+            <ol>
+              <li>
+                Open <span class="kbd">Tools → Scripts</span> in OBS Studio.
+              </li>
+              <li>
+                Click the <span class="pill">＋ Add</span> button and select
+                <code>Youtube Live Stats.lua</code>.
+              </li>
+              <li>
+                The script will appear in the list; select it to configure.
+              </li>
+            </ol>
+
+            <p>
+              <span class="tag tag--brand">Recommended</span>
+              Store the Lua file in a dedicated folder so it doesn’t get lost
+              when cleaning project files:
+            </p>
+
+            <h3>Preferred location (create <code>obs-scripts</code>)</h3>
+            <ul>
+              <li>
+                <strong>Windows:</strong>
+                <code>%AppData%\obs-studio\obs-scripts\</code>
+              </li>
+              <li>
+                <strong>macOS:</strong>
+                <code
+                  >~/Library/Application Support/obs-studio/obs-scripts/</code
+                >
+              </li>
+              <li>
+                <strong>Linux:</strong>
+                <code>~/.config/obs-studio/obs-scripts/</code>
+              </li>
+            </ul>
+
+            <h3>Example layout</h3>
+            <pre><code>obs-studio/
+└─ obs-scripts/
+   └─ Youtube Live Stats.lua
+</code></pre>
+          </div>
+
+          <div class="media-gallery">
+            <figure class="doc-fig" aria-label="Open Scripts window">
+              <img
+                class="doc-shot"
+                src="assets/img/Screenshot_2.png"
+                alt="Open the Scripts window in OBS"
+                data-lightbox
+                data-group="install"
+              />
+              <figcaption>Open <strong>Tools → Scripts</strong>.</figcaption>
+            </figure>
+
+            <figure class="doc-fig" aria-label="Load Lua script">
+              <img
+                class="doc-shot"
+                src="assets/img/Screenshot_3.png"
+                alt="Load the Lua script with the + button"
+                data-lightbox
+                data-group="install"
+              />
+              <figcaption>
+                Press <strong>＋ Add</strong> and load the Lua file from your
+                <code>obs-scripts</code> folder.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="config" class="card">
+        <h2>Configure</h2>
+
+        <div class="media-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>YouTube Video ID</td>
+                <td>ID of the live video whose stats you want.</td>
+              </tr>
+              <tr>
+                <td>YouTube API Key</td>
+                <td>Your YouTube Data API v3 key.</td>
+              </tr>
+              <tr>
+                <td>Polling interval (s)</td>
+                <td>How often to refresh stats (min 5s).</td>
+              </tr>
+              <tr>
+                <td>Likes / Views / Viewers Source</td>
+                <td>OBS Text sources to receive values.</td>
+              </tr>
+              <tr>
+                <td>Font / Color</td>
+                <td>
+                  Optional: set consistent visual style for all three sources.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <figure class="doc-fig" aria-label="Configure screenshot placeholder">
+            <img
+              class="doc-shot"
+              src="assets/img/Screenshot_4.png"
+              alt="Configure screenshot placeholder"
+              data-lightbox
+              data-group="overall"
+            />
+            <figcaption>
+              Script properties with sources, API key, and formatting.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>How It Works</h2>
+        <p>
+          The script queries the YouTube Data API for
+          <code>statistics</code> and <code>liveStreamingDetails</code>. It
+          updates three text sources with Likes, Views, and concurrent live
+          Viewers. If a source is missing, the script can create it
+          automatically and add it to your active scene.
+        </p>
+      </section>
+
+      <section id="troubleshoot" class="card">
+        <h2>Troubleshooting</h2>
+        <ul>
+          <li>
+            <strong>Empty values</strong>: If the stream isn’t live,
+            <code>concurrentViewers</code> may be <code>-</code>.
+          </li>
+          <li>
+            <strong>No updates</strong>: Verify Video ID / API key; ensure
+            <em>Polling interval</em> ≥ 5s.
+          </li>
+          <li>
+            <strong>Sources missing</strong>: Click
+            <em>Refresh and create sources</em> and re‑select them.
+          </li>
+        </ul>
+      </section>
+
+      <section id="faq" class="card">
+        <h2>FAQ</h2>
+        <p>
+          <strong>Q.</strong> Does it run on all platforms?<br />
+          <strong>A.</strong> Yes Windows, macOS, and Linux.
+        </p>
+        <p>
+          <strong>Q.</strong> Can I change fonts/colors later?<br />
+          <strong>A.</strong> Yes adjust the font and color picker and click
+          <em>🎨 Apply Formatting</em>.
+        </p>
+        <p>
+          <strong>Q.</strong> Where do I get the API key?<br />
+          <strong>A.</strong> See the tutorial on
+          <a
+            href="https://obscountdown.com/youtube-live-likes-counter-obs-studio#tutorial"
+            target="_blank"
+            rel="noopener"
+            >obscountdown.com</a
+          >.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      Powered by <strong>obscountdown.com</strong> • Author:
+      <strong>MMLTech</strong> •
+      <a href="https://ko-fi.com/mmltech" target="_blank" rel="noopener"
+        >Ko‑fi</a
+      >
+      •
+      <a href="https://paypal.me/mmltools" target="_blank" rel="noopener"
+        >PayPal</a
+      >
+    </footer>
+  </body>
+</html>

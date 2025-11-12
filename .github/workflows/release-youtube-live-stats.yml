@@ -1,0 +1,34 @@
+name: Release YouTube Live Stats
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Youtube Live Stats.lua"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute tag
+        id: tag
+        run: |
+          echo "TAG=v$(date +'%Y.%m.%d')-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: "YouTube Live Stats ${{ steps.tag.outputs.TAG }}"
+          body: |
+            Automated release for updates to **Youtube Live Stats.lua** on `main`.
+            - Triggered by file change: Youtube Live Stats.lua
+          draft: false
+          prerelease: false
+          files: |
+            Youtube Live Stats.lua
