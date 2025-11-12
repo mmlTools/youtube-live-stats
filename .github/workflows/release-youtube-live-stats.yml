@@ -14,10 +14,30 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout (full history so diff works)
+      - name: Checkout (full history for proper diff)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Locate Lua file (case/dir tolerant)
+        id: locate
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Look for common name variants (case-insensitive), anywhere in repo
+          CANDIDATES="$(git ls-files \
+            | grep -E -i '(^|/)(youtube[ _-]?live[ _-]?stats\.lua)$' || true)"
+          echo "Found candidates:"
+          echo "$CANDIDATES"
+          if [ -z "$CANDIDATES" ]; then
+            echo "lua_path=" >> "$GITHUB_OUTPUT"
+            echo "No Lua file matched. Failing."
+            exit 1
+          fi
+          # Pick the first match deterministically
+          LUA_PATH="$(echo "$CANDIDATES" | head -n1)"
+          echo "lua_path=$LUA_PATH" >> "$GITHUB_OUTPUT"
+          echo "Using: $LUA_PATH"
 
       - name: Show push SHAs (debug)
         run: |
@@ -30,25 +50,34 @@ jobs:
         env:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.sha }}
+          LUA: ${{ steps.locate.outputs.lua_path }}
         run: |
           set -euo pipefail
-          # On manual runs, BEFORE may be empty; force release in that case
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ -z "${BEFORE}" ]; then
+          # Manual run? Release.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "should_release=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Ensure BOTH SHAs exist locally (needed on merge commits)
-          git fetch --no-tags --prune --depth=100 origin "${BEFORE}" "${AFTER}" || true
+          # On some events BEFORE can be all zeros or empty; treat as "changed"
+          if [ -z "${BEFORE}" ] || [ "${BEFORE}" = "0000000000000000000000000000000000000000" ]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-          echo "Changed files between $BEFORE..$AFTER:"
-          git diff --name-only "${BEFORE}" "${AFTER}" | tee /tmp/changed.txt
+          # Make sure both SHAs exist locally
+          git fetch --no-tags --prune --depth=200 origin "${BEFORE}" "${AFTER}" || true
 
-          if grep -Fxq "Youtube Live Stats.lua" /tmp/changed.txt; then
-            echo "Lua file changed."
+          git diff --name-only "${BEFORE}" "${AFTER}" | sed 's#^\./##' > /tmp/changed.txt
+          echo "Changed files:"
+          cat /tmp/changed.txt
+
+          # Exact path match (handles spaces)
+          if grep -Fxq "${LUA}" /tmp/changed.txt; then
+            echo "Lua changed: ${LUA}"
             echo "should_release=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Lua file NOT changed."
+            echo "Lua NOT changed in this push."
             echo "should_release=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -60,13 +89,13 @@ jobs:
       - name: Zip Lua
         if: steps.changed.outputs.should_release == 'true'
         env:
-          LUA_FILE: "Youtube Live Stats.lua"
+          LUA: ${{ steps.locate.outputs.lua_path }}
           TAG: ${{ steps.tag.outputs.TAG }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp "$LUA_FILE" dist/
-          (cd dist && zip -9 "youtube-live-stats-${TAG}.zip" "$LUA_FILE")
+          cp "${LUA}" dist/
+          (cd dist && zip -9 "youtube-live-stats-${TAG}.zip" "$(basename "${LUA}")")
           ls -lah dist
 
       - name: Create GitHub Release
@@ -83,4 +112,4 @@ jobs:
 
       - name: Skip (no lua changes)
         if: steps.changed.outputs.should_release != 'true'
-        run: echo "No changes to 'Youtube Live Stats.lua' in this push. Skipping release."
+        run: echo "No changes to the Lua file in this push. Skipping release."
