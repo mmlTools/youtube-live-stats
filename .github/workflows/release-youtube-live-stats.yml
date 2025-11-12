@@ -3,10 +3,10 @@ name: Release YouTube Live Stats
 on:
   push:
     branches: [main]
-    paths:
-      - "Youtube Live Stats.lua"
     paths-ignore:
+      - "**/*.md"
       - "docs/**"
+  workflow_dispatch:
 
 jobs:
   release:
